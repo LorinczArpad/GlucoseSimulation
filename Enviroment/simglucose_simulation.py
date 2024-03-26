@@ -1,10 +1,9 @@
 from datetime import datetime
 from simglucose.sensor.cgm import CGMSensor
-from simglucose.controller.basal_bolus_ctrller import BBController
 from simglucose.actuator.pump import InsulinPump
 from simglucose.patient.t1dpatient import T1DPatient
 from simglucose.simulation.scenario_gen import RandomScenario
-from simglucose.simulation.sim_engine import SimObj, sim, batch_sim
+from simglucose.simulation.sim_engine import SimObj, sim
 from datetime import datetime, timedelta
 from simglucose.simulation.env import T1DSimEnv
 

@@ -1,6 +1,4 @@
 from Enviroment.simglucose_simulation import Simulation
-import pandas as pd
-
 
 def main():
     simOne = Simulation().getSimulationResults(2)

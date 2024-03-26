@@ -1,7 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_squared_error
 class DecisionTree():
     def __init__(self):
         self.dtr = DecisionTreeRegressor(max_depth=3)
