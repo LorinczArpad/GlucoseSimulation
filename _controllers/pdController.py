@@ -13,7 +13,10 @@ class PDController(Controller):
     def __init__(self, P=1, D=0.1):
         self.P = P  # Proportional gain
         self.D = D  # Derivative gain
-        self.prev_error = 0
+        self.prev_glucose = 0
+        self.dose = 0
+        self.min_glucose = 70
+        self.max_glucose = 100
 
     def policy(self, obs,reward,done, **info):
         if done:
@@ -21,10 +24,28 @@ class PDController(Controller):
         else:
             # PD control law
             glucose = obs.CGM
-            rate_of_change = glucose - self.prev_error
-            action = self.P * glucose + self.D * rate_of_change
-            self.prev_error = glucose
-            return Action(basal=action, bolus=0)
+            if(self.prev_glucose == 0):
+                rate_of_change = 0
+            else:
+                rate_of_change= glucose - self.prev_glucose
+            
+            if(rate_of_change < 0):
+                self.dose = self.dose + rate_of_change
+            if(rate_of_change > 0):
+                self.dose = self.dose + rate_of_change
+            if(self.dose < 0):
+                self.dose = 0
+            print(f"Jelenlegi:{glucose} Elozo:{self.prev_glucose} Valtozas:{rate_of_change}")
+            self.prev_glucose = glucose
+            if(glucose > self.max_glucose):
+                print(f"ALKALMAZVA dose:{self.dose}")
+                return Action(basal=self.dose, bolus=0) 
+            else:
+                return Action(basal=0, bolus=0) 
+                   
+                
+           
+        
     def reset(self):
         self.P = 1
         self.D = 0.1  
