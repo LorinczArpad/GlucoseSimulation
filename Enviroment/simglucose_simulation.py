@@ -8,11 +8,13 @@ from datetime import datetime, timedelta
 from simglucose.simulation.env import T1DSimEnv
 from simglucose.controller.basal_bolus_ctrller import BBController
 
-from Controllers.pdController import PDController
+from _controllers.pdController import PDController
+
+
 class Simulation:
     def __init__(self):
         #Conroller
-        self.controller = BBController()
+        self.controller = PDController()
 
         # Sensor
         self.sensor = CGMSensor.withName('Dexcom',seed=1)

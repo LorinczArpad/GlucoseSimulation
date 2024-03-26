@@ -15,11 +15,17 @@ class PDController(Controller):
         self.D = D  # Derivative gain
         self.prev_error = 0
 
-    def policy(self, observation):
-        # PD control law
-        glucose = observation.cgm
-        rate_of_change = glucose - self.prev_error
-        action = self.P * (glucose - self.target) + self.D * rate_of_change
-        self.prev_error = glucose
-        return Action(basal=action, bolus=0)
-
+    def policy(self, obs,reward,done, **info):
+        if done:
+            return Action(basal=0, bolus=0)  # Leállítjuk a szimulációt, minden műveletet nullázunk
+        else:
+            # PD control law
+            glucose = obs.CGM
+            rate_of_change = glucose - self.prev_error
+            action = self.P * glucose + self.D * rate_of_change
+            self.prev_error = glucose
+            return Action(basal=action, bolus=0)
+    def reset(self):
+        self.P = 1
+        self.D = 0.1  
+        self.prev_error = 0
