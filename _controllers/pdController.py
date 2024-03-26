@@ -17,31 +17,11 @@ class PDController(Controller):
         self.dose = 0
         self.min_glucose = 70
         self.max_glucose = 100
+        self.iter = 0;
 
     def policy(self, obs,reward,done, **info):
-        if done:
-            return Action(basal=0, bolus=0)  # Leállítjuk a szimulációt, minden műveletet nullázunk
-        else:
-            # PD control law
-            glucose = obs.CGM
-            if(self.prev_glucose == 0):
-                rate_of_change = 0
-            else:
-                rate_of_change= glucose - self.prev_glucose
-            
-            if(rate_of_change < 0):
-                self.dose = self.dose + rate_of_change
-            if(rate_of_change > 0):
-                self.dose = self.dose + rate_of_change
-            if(self.dose < 0):
-                self.dose = 0
-            print(f"Jelenlegi:{glucose} Elozo:{self.prev_glucose} Valtozas:{rate_of_change}")
-            self.prev_glucose = glucose
-            if(glucose > self.max_glucose):
-                print(f"ALKALMAZVA dose:{self.dose}")
-                return Action(basal=self.dose, bolus=0) 
-            else:
-                return Action(basal=0, bolus=0) 
+
+        return Action(basal=0.032, bolus=0) 
                    
                 
            
