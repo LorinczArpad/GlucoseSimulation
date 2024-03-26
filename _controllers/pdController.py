@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from simglucose.controller.base import Controller, Action
 from simglucose.controller.basal_bolus_ctrller import BBController
 from simglucose.sensor.cgm import CGMSensor
@@ -9,6 +9,8 @@ from simglucose.simulation.sim_engine import SimObj, sim, batch_sim
 import numpy as np
 from simglucose.simulation.user_interface import simulate
 
+from Enviroment.deciisionTree import DecisionTree
+
 class PDController(Controller):
     def __init__(self, P=1, D=0.1):
         self.P = P  # Proportional gain
@@ -18,10 +20,28 @@ class PDController(Controller):
         self.min_glucose = 70
         self.max_glucose = 100
         self.iter = 0;
+        self.decTree  = DecisionTree()
+        self.decTree.train()
 
     def policy(self, obs,reward,done, **info):
-
-        return Action(basal=0.032, bolus=0) 
+        if(done):
+            return Action(basal=0, bolus=0) 
+        else:   
+            lbgi = float(info['lbgi'])
+            time = datetime.strptime(str(info['time']), '%Y-%m-%d %H:%M:%S.%f')
+            # Convert 'hbgi' to float
+            hbgi = float(info['hbgi'])
+            glucose = obs.CGM
+            # Convert 'risk' to float
+            risk = float(info['risk'])
+            test_data = {
+                'Time': [time],
+                'CGM': [glucose],
+                'LBGI': [lbgi],
+                'HBGI': [hbgi],
+                'Risk': [risk]
+            }
+            return Action(basal=self.decTree.create_result(test_data), bolus=0) 
                    
                 
            

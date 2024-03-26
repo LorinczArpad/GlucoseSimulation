@@ -8,6 +8,7 @@ class DecisionTree():
     def train(self):
         data = pd.read_csv("./Results/EditedTestResults.csv")[:-1]  # Replace "your_data.csv" with the path to your data file
         fixed_Data = data.drop(columns='BG')
+        fixed_Data = fixed_Data.drop(columns="CHO")
         # Split the data into features (X) and target variable (y)
         X = fixed_Data .drop(columns=['Time', 'insulin'])  # Assuming 'Time' and 'insulin' are not features
         y = fixed_Data ['insulin']
@@ -32,16 +33,3 @@ class DecisionTree():
 
         # Print the single predicted value
         return single_predicted_insulin
-
-test = DecisionTree()
-test.train()
-
-test_data = {
-    'Time': ['2024-03-26 18:30:01.768573'],
-    'CGM': [89.90822635385112],
-    'CHO': [0.0],
-    'LBGI': [0.0],
-    'HBGI': [2.7552919270419367],
-    'Risk': [2.7552919270419367,]
-}
-print(f"GECIIIIIIIIIIIIIIIIII {test.create_result(test_data)}")

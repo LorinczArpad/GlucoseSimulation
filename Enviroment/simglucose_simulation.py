@@ -15,7 +15,7 @@ from _controllers.pdController import PDController
 class Simulation:
     def __init__(self):
         #Conroller
-        self.controller = BBController()
+        self.controller = PDController()
 
         # Sensor
         self.sensor = CGMSensor.withName('Dexcom',seed=1)
@@ -24,7 +24,7 @@ class Simulation:
         self.pump = InsulinPump.withName('Insulet')
 
         # Patient
-        self.patient = T1DPatient.withName('adolescent#001')
+        self.patient = T1DPatient.withName('adult#001')
         # Simulation Scenario
         start_time = datetime.now()
         self.scenario = RandomScenario(start_time=start_time, seed=1)
