@@ -6,16 +6,17 @@ from simglucose.simulation.scenario_gen import RandomScenario
 from simglucose.simulation.sim_engine import SimObj, sim
 from datetime import datetime, timedelta
 from simglucose.simulation.env import T1DSimEnv
-
+from simglucose.controller.basal_bolus_ctrller import BBController
 
 from _controllers.pdController import PDController
 
 
 class Simulation:
-    def __init__(self):
+    def __init__(self,patientName:str,patientParams):
         #Conroller
-        self.controller = PDController()
-
+        self.controller = PDController(patientParams)
+        #BBController()
+        #PDController()
         # Sensor
         self.sensor = CGMSensor.withName('Dexcom',seed=1)
 
@@ -23,7 +24,7 @@ class Simulation:
         self.pump = InsulinPump.withName('Insulet')
 
         # Patient
-        self.patient = T1DPatient.withName('adult#001')
+        self.patient = T1DPatient.withName(patientName)
         # Simulation Scenario
         start_time = datetime.now()
         self.scenario = RandomScenario(start_time=start_time, seed=1)
