@@ -12,9 +12,9 @@ from _controllers.pdController import PDController
 
 
 class Simulation:
-    def __init__(self,patientName:str,patientParams):
+    def __init__(self,patientName:str,patientParams,P,I,D):
         #Conroller
-        self.controller = PDController(patientParams,0.001,0.0001,0.00001)
+        self.controller = PDController(patientParams,P,I,D)
         #BBController()
         #PDController()
         # Sensor
@@ -28,7 +28,7 @@ class Simulation:
         # Simulation Scenario
         start_time = datetime.now()
         self.scenario = RandomScenario(start_time=start_time, seed=1)
-        
+
     def getSimulationObject(self, numberOfDays):
         env = T1DSimEnv(self.patient, self.sensor, self.pump, self.scenario)
         return SimObj(env,self.controller,timedelta(days=numberOfDays),animate=False, path='./Results')
