@@ -16,13 +16,16 @@ def CreateCommonCSV():
 
     columns = patients_df.columns.tolist()
     columns.append('insulin')
+    columns.append('BG')
     common_df = pd.DataFrame(columns=columns)
     for index, row in patients_df.iterrows():
             name = row['Name']
             row_without_name = row.drop('Name', errors='ignore')
             insulin_df = pd.read_csv(f'./Results/{name}.csv')
             first_insulin_value = insulin_df['insulin'].iloc[0]
+            first_glucose_value = insulin_df['BG'].iloc[0]
             row_without_name['insulin'] = first_insulin_value
+            row_without_name['BG'] = first_glucose_value
             common_df = common_df._append(row_without_name, ignore_index=True)
     common_df.to_csv('./Results/Common.csv')         
     
@@ -45,7 +48,7 @@ def main():
     simOne = Simulation('adult#001',adult_dic).getSimulationResults(1)
     edited_df= simOne[simOne['insulin'] != 0]
     edited_df.to_csv(f'./Results/JEJ_edited.csv', index=True, header=True)
-    #print('Done')
+    print('Done')
 
 if __name__ == "__main__":
     main()
