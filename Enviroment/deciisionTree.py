@@ -9,7 +9,7 @@ class DecisionTree():
         print(data.head())
         X = data.drop('insulin', axis=1)
         Y = data['insulin'].round(4)
-        print(X)
+        #print(X)
         X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3)
         # Train the DecisionTreeRegressor
         self.dtr.fit(X_train, y_train)
