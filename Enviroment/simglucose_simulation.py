@@ -14,12 +14,12 @@ from _controllers.pdController import PDController
 class Simulation:
     def __init__(self,patientName:str,patientParams):
         #Conroller
-        self.controller = PDController(patientParams)
+        self.controller = PDController(patientParams,0.001,0.0001,0.00001)
         #BBController()
         #PDController()
         # Sensor
         self.sensor = CGMSensor.withName('Dexcom',seed=1)
-
+        
         # Pump
         self.pump = InsulinPump.withName('Insulet')
 

@@ -16,16 +16,16 @@ def CreateCommonCSV():
 
     columns = patients_df.columns.tolist()
     columns.append('insulin')
-    columns.append('BG')
+    columns.append('CGM')
     common_df = pd.DataFrame(columns=columns)
     for index, row in patients_df.iterrows():
             name = row['Name']
             row_without_name = row.drop('Name', errors='ignore')
             insulin_df = pd.read_csv(f'./Results/{name}.csv')
             first_insulin_value = insulin_df['insulin'].iloc[0]
-            first_glucose_value = insulin_df['BG'].iloc[0]
+            first_glucose_value = insulin_df['CGM'].iloc[0]
             row_without_name['insulin'] = first_insulin_value
-            row_without_name['BG'] = first_glucose_value
+            row_without_name['CGM'] = first_glucose_value
             common_df = common_df._append(row_without_name, ignore_index=True)
     common_df.to_csv('./Results/Common.csv')         
     
@@ -44,7 +44,22 @@ def main():
                'x0_11': 72.4341762342,
                'x0_12': 141.153779328,
                'x0_13': 265.370112,
-                'BW': 102.32, 'EGPb': 2.2758, 'Gb': 138.56, 'Ib': 100.25, 'kabs': 0.08906, 'kmax': 0.046122, 'kmin': 0.0037927, 'b': 0.70391, 'd': 0.21057, 'Vg': 1.9152, 'Vi': 0.054906, 'Ipb': 5.5043265, 'Vmx': 0.031319, 'Km0': 253.52, 'k2': 0.087114, 'k1': 0.058138, 'p2u': 0.027802, 'm1': 0.15446, 'm5': 0.027345, 'CL': 1.2642, 'HEb': 0.6, 'm2': 0.225027424083, 'm4': 0.090010969633, 'm30': 0.23169, 'Ilb': 3.20762505142, 'ki': 0.0046374, 'kp2': 0.00469, 'kp3': 0.01208, 'f': 0.9, 'Gpb': 265.370112, 'ke1': 0.0005, 'ke2': 339.0, 'Fsnc': 1.0, 'Gtb': 162.457097269, 'Vm0': 3.2667306607, 'Rdb': 2.2758, 'PCRb': 0.0164246535797, 'kd': 0.0152, 'ksc': 0.0766, 'ka1': 0.0019, 'ka2': 0.0078, 'dosekempt': 90000.0, 'u2ss': 1.2386244136, 'isc1ss': 72.4341762342, 'isc2ss': 141.153779328, 'kp1': 4.73140582528, 'patient_history': 0.0}
+                'BW': 102.32,
+                'EGPb': 2.2758,
+                'Gb': 138.56,
+                'Ib': 100.25,
+                'kabs': 0.08906,
+                'kmax': 0.046122,
+                'kmin': 0.0037927,
+                'b': 0.70391,
+                'd': 0.21057,
+                'Vg': 1.9152,
+                'Vi': 0.054906,
+                'Ipb': 5.5043265,
+                'Vmx': 0.031319,
+                'Km0': 253.52,
+                'k2': 0.087114,
+                'k1': 0.058138, 'p2u': 0.027802, 'm1': 0.15446, 'm5': 0.027345, 'CL': 1.2642, 'HEb': 0.6, 'm2': 0.225027424083, 'm4': 0.090010969633, 'm30': 0.23169, 'Ilb': 3.20762505142, 'ki': 0.0046374, 'kp2': 0.00469, 'kp3': 0.01208, 'f': 0.9, 'Gpb': 265.370112, 'ke1': 0.0005, 'ke2': 339.0, 'Fsnc': 1.0, 'Gtb': 162.457097269, 'Vm0': 3.2667306607, 'Rdb': 2.2758, 'PCRb': 0.0164246535797, 'kd': 0.0152, 'ksc': 0.0766, 'ka1': 0.0019, 'ka2': 0.0078, 'dosekempt': 90000.0, 'u2ss': 1.2386244136, 'isc1ss': 72.4341762342, 'isc2ss': 141.153779328, 'kp1': 4.73140582528, 'patient_history': 0.0}
     simOne = Simulation('adult#001',adult_dic).getSimulationResults(1)
     edited_df= simOne[simOne['insulin'] != 0]
     edited_df.to_csv(f'./Results/JEJ_edited.csv', index=True, header=True)
