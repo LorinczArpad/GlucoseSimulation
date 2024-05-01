@@ -12,9 +12,9 @@ from _controllers.pdController import PDController
 
 
 class Simulation:
-    def __init__(self,patientName:str,patientParams,P,I,D):
+    def __init__(self,patientName:str,patientParams):
         #Conroller
-        self.controller = PDController(patientParams,P,I,D)
+        self.controller = PDController(patientParams)
         #BBController()
         #PDController()
         # Sensor

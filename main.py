@@ -1,6 +1,9 @@
 from Enviroment.simglucose_simulation import Simulation
 import pandas as pd
 import random
+import csv
+import numpy as np
+
 def UseSimulation():
     data = pd.read_csv('C:\\Users\\dudu\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\simglucose\\params\\vpatient_params.csv')
     names = data['Name']
@@ -32,10 +35,10 @@ def CreateCommonCSV():
     
 def TestPIDParams(dict): #adult_dic
     ResultParams = []
-    for i in range(10):
-        randP = random.uniform(0.00001,0.0001)
-        randI = random.uniform(0.00001,0.0001)
-        randD = random.uniform(0.00001,0.0001)
+    for i in range(1):
+        randP = random.uniform(0.00001,0.00005)
+        randI = random.uniform(0.00001,0.00005)
+        randD = random.uniform(0.00001,0.00005)
         ResultParams.append(str(i)+'. run   -P:'+str(randP)+'  I:'+str(randI)+'  D:'+str(randD))
 
         sim = Simulation('adult#001',dict,randP,randI,randD).getSimulationResults(1)
@@ -49,7 +52,7 @@ def TestPIDParams(dict): #adult_dic
 
 def main():
     #CreateCommonCSV()
-    adult_dic={'x0_ 1': 0.0,
+        adult_dic={'x0_ 1': 0.0,
                'x0_ 2': 0.0,
                'x0_ 3': 0.0,
                'x0_ 4': 265.370112,
@@ -77,9 +80,40 @@ def main():
                 'Vmx': 0.031319,
                 'Km0': 253.52,
                 'k2': 0.087114,
-                'k1': 0.058138, 'p2u': 0.027802, 'm1': 0.15446, 'm5': 0.027345, 'CL': 1.2642, 'HEb': 0.6, 'm2': 0.225027424083, 'm4': 0.090010969633, 'm30': 0.23169, 'Ilb': 3.20762505142, 'ki': 0.0046374, 'kp2': 0.00469, 'kp3': 0.01208, 'f': 0.9, 'Gpb': 265.370112, 'ke1': 0.0005, 'ke2': 339.0, 'Fsnc': 1.0, 'Gtb': 162.457097269, 'Vm0': 3.2667306607, 'Rdb': 2.2758, 'PCRb': 0.0164246535797, 'kd': 0.0152, 'ksc': 0.0766, 'ka1': 0.0019, 'ka2': 0.0078, 'dosekempt': 90000.0, 'u2ss': 1.2386244136, 'isc1ss': 72.4341762342, 'isc2ss': 141.153779328, 'kp1': 4.73140582528, 'patient_history': 0.0}
-    
-    TestPIDParams(adult_dic)
+                'k1': 0.058138,
+                'p2u': 0.027802,
+                'm1': 0.15446,
+                'm5': 0.027345,
+                'CL': 1.2642,
+                'HEb': 0.6,
+                'm2': 0.225027424083,
+                'm4': 0.090010969633,
+                'm30': 0.23169,
+                'Ilb': 3.20762505142,
+                'ki': 0.0046374,
+                'kp2': 0.00469,
+                'kp3': 0.01208,
+                'f': 0.9,
+                'Gpb': 265.370112,
+                'ke1': 0.0005,
+                'ke2': 339.0,
+                'Fsnc': 1.0,
+                'Gtb': 162.457097269,
+                'Vm0': 3.2667306607,
+                'Rdb': 2.2758,
+                'PCRb': 0.0164246535797,
+                'kd': 0.0152,
+                'ksc': 0.0766,
+                'ka1': 0.0019,
+                'ka2': 0.0078,
+                'dosekempt': 90000.0,
+                'u2ss': 1.2386244136,
+                'isc1ss': 72.4341762342,
+                'isc2ss': 141.153779328,
+                'kp1': 4.73140582528,
+                'patient_history': 0.0,
+                }
 
+        
 if __name__ == "__main__":
     main()
