@@ -111,8 +111,10 @@ def main():
                 'isc1ss': 72.4341762342,
                 'isc2ss': 141.153779328,
                 'kp1': 4.73140582528,
-                'patient_history': 0.0,
-                }
+                'patient_history': 0.0}
+        sim = Simulation('adult#001',adult_dic).getSimulationResults(1)
+        edited_df= sim[sim['insulin'] != 0]
+        edited_df.to_csv(f'./Results/FINALBOSSV2.csv', index=True, header=True)
 
         
 if __name__ == "__main__":
