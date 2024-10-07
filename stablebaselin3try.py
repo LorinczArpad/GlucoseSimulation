@@ -1,4 +1,7 @@
+# Megkéne nézni a gym es megközelítést
+
 #T1DSimEnv class-ban átírni a reward functiont valami hasonlóra:
+
 
 #Reward Function(Büntetés ha túl alacsony, vagy túl nagya a vércukorszint az adott stepben ())
 #Kicsit hegeszteni kell majd a mostlévő pipeline-on mert az az előző órában mért glucose szint alapján díjjaz
