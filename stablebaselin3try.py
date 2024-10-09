@@ -1,7 +1,23 @@
 # Megkéne nézni a gym es megközelítést
 
 #T1DSimEnv class-ban átírni a reward functiont valami hasonlóra:
+#Majd init be is kell ezt azt állítani (itt benne can a reward function is ?)
+class CustomSimGlucoseEnv(T1DSimEnv):
+    def __init__(self, patient, sensor, pump, scenario):
+        super().__init__(patient, sensor, pump, scenario)
+        self.action_space = spaces.Box(low=np.array([0]), high=np.array([10]), dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([400]), dtype=np.float32)
 
+    def step(self, action):
+        observation, reward, done, info = super().step(action)
+        glucose = observation
+        if glucose > 180:
+            reward = -1
+        elif glucose < 70:
+            reward = -1
+        else:
+            reward = 1
+        return observation, reward, done, info
 
 #Reward Function(Büntetés ha túl alacsony, vagy túl nagya a vércukorszint az adott stepben ())
 #Kicsit hegeszteni kell majd a mostlévő pipeline-on mert az az előző órában mért glucose szint alapján díjjaz
