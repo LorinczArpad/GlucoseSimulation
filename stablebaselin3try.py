@@ -2,6 +2,7 @@
 
 #T1DSimEnv class-ban átírni a reward functiont valami hasonlóra:
 #Majd init be is kell ezt azt állítani (itt benne can a reward function is ?)
+#spaces a  gym-ből van (ez a tartomány amit az agent próbál kitalálni (ezt hogy kell beállítani az wtf + doksi búvárkodás))
 class CustomSimGlucoseEnv(T1DSimEnv):
     def __init__(self, patient, sensor, pump, scenario):
         super().__init__(patient, sensor, pump, scenario)
