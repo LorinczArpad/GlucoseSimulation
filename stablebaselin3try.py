@@ -1,5 +1,13 @@
 # Megkéne nézni a gym es megközelítést
-
+import numpy as np
+from simglucose.simulation.env import T1DSimEnv
+from simglucose.simulation.scenario_gen import RandomScenario
+from simglucose.patient.t1dpatient import T1DPatient
+from simglucose.sensor.cgm import CGMSensor
+from simglucose.actuator.pump import InsulinPump
+from stable_baselines3 import PPO
+from gym import spaces
+from stable_baselines3.common.env_util import make_vec_env
 #T1DSimEnv class-ban átírni a reward functiont valami hasonlóra:
 #Majd init be is kell ezt azt állítani (itt benne can a reward function is ?)
 #spaces a  gym-ből van (ez a tartomány amit az agent próbál kitalálni (ezt hogy kell beállítani az wtf + doksi búvárkodás))
@@ -33,10 +41,6 @@ def custom_reward(observation, action):
         return 1  
 # Használat 
 # Majd ki kell próbálni
-import gym
-from stable_baselines3 import PPO
-from simglucose.envs.simglucose_gym_env import T1DSimEnv
-from stable_baselines3.common.env_util import make_vec_env
 
 #Környezet csak pateinttel?
 env = T1DSimEnv(patient_name='adult#001')
