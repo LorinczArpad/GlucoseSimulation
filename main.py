@@ -1,121 +1,73 @@
-from Enviroment.simglucose_simulation import Simulation
-import pandas as pd
-import random
-import csv
-import numpy as np
+import gymnasium
+from gymnasium.envs.registration import register
+from simglucose.simulation.scenario import CustomScenario
+from datetime import datetime
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
+from simglucose.envs import T1DSimGymnaisumEnv
+class CustomT1DSimGymnaisumEnv(T1DSimGymnaisumEnv):
+    def step(self, action):
+        # Call the original step method to get the observation, reward, etc.
+        observation, reward, terminated, truncated, info = super().step(action)
+        blood_glucose = observation[0]  # Assuming the first observation is the blood glucose level
+        target_bg = 120  # Ideal blood glucose level
+        bg_tolerance = 20  # Acceptable range around the target
 
-def UseSimulation():
-    data = pd.read_csv('C:\\Users\\dudu\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\simglucose\\params\\vpatient_params.csv')
-    names = data['Name']
+        # Calculate deviation from target
+        deviation = abs(blood_glucose - target_bg)
 
-    for name in names:
-        if(name != 'patient1'): 
-         simOne = Simulation(name).getSimulationResults(1)
-         edited_df= simOne[simOne['insulin'] != 0]
-         edited_df.to_csv('./Results/{name}.csv', index=True, header=True)
-        
-def CreateCommonCSV():
-    patients_df = pd.read_csv('./Results/patient100_updated.csv')
-    patients_df = patients_df.drop(columns=['i'])
+        # Penalize based on how far the blood glucose is from the target
+        if blood_glucose > target_bg + bg_tolerance:
+            # Too high
+            reward -= 5 * (deviation / 10)  # Penalize more for higher deviations
+        elif blood_glucose < target_bg - bg_tolerance:
+            # Too low
+            reward -= 5 * (deviation / 10)  # Penalize more for lower deviations
+        else:
+            # Within acceptable range
+            reward += 5  # Base reward for being in the desired range
 
-    columns = patients_df.columns.tolist()
-    columns.append('insulin')
-    columns.append('CGM')
-    common_df = pd.DataFrame(columns=columns)
-    for index, row in patients_df.iterrows():
-            name = row['Name']
-            row_without_name = row.drop('Name', errors='ignore')
-            insulin_df = pd.read_csv(f'./Results/{name}.csv')
-            first_insulin_value = insulin_df['insulin'].iloc[0]
-            first_glucose_value = insulin_df['CGM'].iloc[0]
-            row_without_name['insulin'] = first_insulin_value
-            row_without_name['CGM'] = first_glucose_value
-            common_df = common_df._append(row_without_name, ignore_index=True)
-    common_df.to_csv('./Results/Common.csv')         
-    
-def TestPIDParams(dict): #adult_dic
-    ResultParams = []
-    for i in range(1):
-        randP = random.uniform(0.00001,0.00005)
-        randI = random.uniform(0.00001,0.00005)
-        randD = random.uniform(0.00001,0.00005)
-        ResultParams.append(str(i)+'. run   -P:'+str(randP)+'  I:'+str(randI)+'  D:'+str(randD))
+            # Add bonus for staying stable in the desired range
+            # Assuming `last_blood_glucose` is a previously saved observation
+            if hasattr(self, 'last_blood_glucose'):
+                fluctuation = abs(blood_glucose - self.last_blood_glucose)
+                if fluctuation < 10:  # Small fluctuation
+                    reward += 2  # Reward for stability
+                elif fluctuation >= 10 and fluctuation < 20:  # Moderate fluctuation
+                    reward -= 1  # Small penalty for larger fluctuation
+            
+            # Update last blood glucose for the next step
+            self.last_blood_glucose = blood_glucose
 
-        sim = Simulation('adult#001',dict,randP,randI,randD).getSimulationResults(1)
-        edited_df= sim[sim['insulin'] != 0]
-        edited_df.to_csv(f'./Results/['+str(i)+']PID_Test.csv', index=True, header=True)
-        print(str(i)+'. Sim Done')
-    
-    for item in ResultParams:
-        print(item)
-
-
+        return observation, reward, terminated, truncated, info  # Return all values
 def main():
-    #CreateCommonCSV()
-        adult_dic={'x0_ 1': 0.0,
-               'x0_ 2': 0.0,
-               'x0_ 3': 0.0,
-               'x0_ 4': 265.370112,
-               'x0_ 5': 162.457097269,
-               'x0_ 6': 5.5043265,
-               'x0_ 7': 0.0,
-               'x0_ 8': 100.25,
-               'x0_ 9': 100.25,
-               'x0_10': 3.20762505142,
-               'x0_11': 72.4341762342,
-               'x0_12': 141.153779328,
-               'x0_13': 265.370112,
-                'BW': 102.32,
-                'EGPb': 2.2758,
-                'Gb': 138.56,
-                'Ib': 100.25,
-                'kabs': 0.08906,
-                'kmax': 0.046122,
-                'kmin': 0.0037927,
-                'b': 0.70391,
-                'd': 0.21057,
-                'Vg': 1.9152,
-                'Vi': 0.054906,
-                'Ipb': 5.5043265,
-                'Vmx': 0.031319,
-                'Km0': 253.52,
-                'k2': 0.087114,
-                'k1': 0.058138,
-                'p2u': 0.027802,
-                'm1': 0.15446,
-                'm5': 0.027345,
-                'CL': 1.2642,
-                'HEb': 0.6,
-                'm2': 0.225027424083,
-                'm4': 0.090010969633,
-                'm30': 0.23169,
-                'Ilb': 3.20762505142,
-                'ki': 0.0046374,
-                'kp2': 0.00469,
-                'kp3': 0.01208,
-                'f': 0.9,
-                'Gpb': 265.370112,
-                'ke1': 0.0005,
-                'ke2': 339.0,
-                'Fsnc': 1.0,
-                'Gtb': 162.457097269,
-                'Vm0': 3.2667306607,
-                'Rdb': 2.2758,
-                'PCRb': 0.0164246535797,
-                'kd': 0.0152,
-                'ksc': 0.0766,
-                'ka1': 0.0019,
-                'ka2': 0.0078,
-                'dosekempt': 90000.0,
-                'u2ss': 1.2386244136,
-                'isc1ss': 72.4341762342,
-                'isc2ss': 141.153779328,
-                'kp1': 4.73140582528,
-                'patient_history': 0.0}
-        sim = Simulation('adult#001',adult_dic).getSimulationResults(1)
-        edited_df= sim[sim['insulin'] != 0]
-        edited_df.to_csv(f'./Results/FINALBOSSV2.csv', index=True, header=True)
+    register(
+        id="simglucose/adolescent2-v0",
+        entry_point="main:CustomT1DSimGymnaisumEnv",
+        max_episode_steps=100,
+        kwargs={"patient_name": "adolescent#002"},
+        )
 
-        
+    env = gymnasium.make("simglucose/adolescent2-v0", render_mode="human")
+
+    model = PPO("MlpPolicy", env, verbose=1)
+    model.learn(total_timesteps=10000)
+    
+    observation, info = env.reset()
+    for t in range(200):
+        env.render()
+        print(env.action_space)
+        action, _states = model.predict(observation)
+        print(action)
+        observation, reward, terminated, truncated, info = env.step(action)
+        print(observation)
+        # print(
+        #     f"Step {t}: observation {observation}, reward {reward}, terminated {terminated}, truncated {truncated}, info {info}"
+        # )
+        if terminated or truncated:
+            print("Episode finished after {} timesteps".format(t + 1))
+            break
+
+
 if __name__ == "__main__":
     main()
