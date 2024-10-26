@@ -30,15 +30,47 @@ class CustomSimGlucoseEnv(T1DSimEnv):
 
 #Reward Function(Büntetés ha túl alacsony, vagy túl nagya a vércukorszint az adott stepben ())
 #Kicsit hegeszteni kell majd a mostlévő pipeline-on mert az az előző órában mért glucose szint alapján díjjaz
+# def custom_reward(observation, action):
+#     glucose = observation['CGM']  
+#     insulin = action
+#     if glucose < 70: 
+#         return -10
+#     elif glucose > 180: 
+#         return -10
+#     else:
+#         return 1
+    
 def custom_reward(observation, action):
-    glucose = observation['CGM']  
-    insulin = action
-    if glucose < 70: 
-        return -10
-    elif glucose > 180: 
-        return -10
+    glucose = observation['CGM']  # Current glucose level from Continuous Glucose Monitor (CGM)
+    insulin = action  # Amount of insulin administered in the current step
+    
+    # Define target glucose range and limits for penalty scaling
+    target_low, target_high = 100, 140
+    hypo_threshold, hyper_threshold = 70, 180
+    
+    # Penalty for glucose out of the ideal range, scaled by deviation
+    if glucose < hypo_threshold:
+        reward = -10 * (hypo_threshold - glucose) / hypo_threshold  # Larger penalty as it moves away from the threshold
+    elif glucose > hyper_threshold:
+        reward = -10 * (glucose - hyper_threshold) / hyper_threshold
+    elif target_low <= glucose <= target_high:
+        reward = 5  # Reward for staying within the tighter target range
     else:
-        return 1  
+        reward = 1  # Minor reward for staying within safe bounds (70-180) but outside the target range (100-140)
+    
+    # Penalty for too much insulin (to prevent hypoglycemia risks)
+    insulin_penalty = -0.1 * insulin if insulin > 5 else 0  # Small penalty if insulin dose is high
+    
+    # Reward for maintaining stability (e.g., low change in glucose level)
+    # If we have previous glucose reading, you can use it for more context:
+    # prev_glucose = observation.get('prev_CGM', glucose)
+    # stability_reward = -abs(glucose - prev_glucose) * 0.01
+    
+    # Total reward calculation
+    reward += insulin_penalty  # + stability_reward (if using previous glucose for stability check)
+
+    return reward
+
 # Használat 
 # Majd ki kell próbálni
 
