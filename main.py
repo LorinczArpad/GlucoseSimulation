@@ -10,6 +10,7 @@ from datetime import datetime
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from simglucose.envs import T1DSimGymnaisumEnv
+import logging
 
 class CustomT1DSimGymnaisumEnv(T1DSimGymnaisumEnv):
     def step(self, action):
@@ -67,7 +68,7 @@ def main():
 
     model = PPO("MlpPolicy", env, verbose=1)
     model.learn(total_timesteps=1000)
-    
+    logging.basicConfig(level=logging.INFO)
     observation, info = env.reset()
     truncated = False
     while(truncated != True):
@@ -79,7 +80,7 @@ def main():
         if(observation < 130):
             action = 0
         observation, reward, terminated, truncated, info = env.step(action)
-        print(action)
+        logging.info(f'Action taken: {action}, Blood Glucose: {observation[0]}, Reward: {reward}')
         
     
     # Save video with imageio
