@@ -57,8 +57,9 @@ class LowGlucoseEnv(T1DSimGymnaisumEnv):
             reward -= 5  
         else:
             reward += 5  
-
-        self.last_blood_glucose = blood_glucose
+        if(action > 0.5):
+            reward -= 20
+        
         return observation, reward, terminated, truncated, info
 
 
@@ -74,8 +75,9 @@ class HighGlucoseEnv(T1DSimGymnaisumEnv):
             reward -= 5  
         else:
             reward += 5  
-
-        self.last_blood_glucose = blood_glucose
+        if(action > 0.5):
+            reward -= 20
+       
         return observation, reward, terminated, truncated, info
 
 
@@ -91,6 +93,7 @@ class InnerGlucoseEnv(T1DSimGymnaisumEnv):
             reward -= 10  
         elif 70 <= blood_glucose <= 130:
             reward += 5  
-
+        if(action > 0.5):
+            reward -= 20
         return observation, reward, terminated, truncated, info
    
