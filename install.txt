@@ -1,1 +1,1 @@
-pip install stable-baselines3 gym simglucose
+pip install stable-baselines3 gym simglucose imageio pillow colorama
