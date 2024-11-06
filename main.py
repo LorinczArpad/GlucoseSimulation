@@ -48,6 +48,8 @@ def main():
     SAVE_TO_CSV = True
     SAVE_VIDEO = True
 
+    patient_name = "child#002"
+
     meal_events = [
         (8, 25), 
         (13, 20),   
@@ -58,10 +60,9 @@ def main():
 
     meal_scenario = CustomScenario(start_time=start_time, scenario=meal_events)
 
-    base_kwargs = {"patient_name": "adolescent#002", 'custom_scenario': meal_scenario}
+    base_kwargs = {"patient_name": patient_name, 'custom_scenario': meal_scenario}
 
     path_to_SimResults_sub_folders = create_and_get_directory_for_sim_results(base_kwargs)
-
     print(f"Folder created: {path_to_SimResults_sub_folders}")
     
     register(
