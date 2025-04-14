@@ -57,7 +57,9 @@
                 'isc1ss': 72.4341762342,
                 'isc2ss': 141.153779328,
                 'kp1': 4.73140582528,
-                'patient_history': 0.0}
+                'patient_history': 0.0
+                
+                }
     pid_data = pd.read_csv('./Results/pid_test_data.csv')
     results_data = pd.read_csv('./Results/[0]PID_Test.csv')
     human_data = pd.DataFrame(np.array(list(adult_dic.values())).reshape(1, -1), columns=[str(key) for key in adult_dic.keys()])

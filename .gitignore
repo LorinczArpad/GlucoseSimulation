@@ -4,3 +4,4 @@ Enviroment/__pycache__/*
 __pycache__/main.cpython-312.pyc
 __pycache__/main.cpython-310.pyc
 __pycache__/customEnviroments.cpython-310.pyc
+SimResult/*
