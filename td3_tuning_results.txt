@@ -1,0 +1,21 @@
+Model: lowmodel
+Best Parameters: {'learning_rate': 0.0005184079402815333, 'buffer_size': 174692, 'learning_starts': 4775, 'batch_size': 129, 'tau': 0.007936949271899044, 'gamma': 0.9606235720529378, 'train_freq': 50, 'gradient_steps': 8, 'policy_delay': 8, 'target_policy_noise': 0.13100609434795593, 'target_noise_clip': 0.8074271617328781}
+Network Architecture: {'pi': [64, 64], 'qf': [256, 256]}
+Action Noise Sigma: 0.08212927576007559
+Mean Reward: 1498.09 � 0.00
+Best Value: 1498.09
+--------------------------------------------------
+Model: innermodel
+Best Parameters: {'learning_rate': 0.006866314727006054, 'buffer_size': 203431, 'learning_starts': 478, 'batch_size': 226, 'tau': 0.00133353679128223, 'gamma': 0.9640650724159061, 'train_freq': 47, 'gradient_steps': 69, 'policy_delay': 4, 'target_policy_noise': 0.38353846667246433, 'target_noise_clip': 0.8603100385042021}
+Network Architecture: {'pi': [64, 64], 'qf': [256, 256]}
+Action Noise Sigma: 0.04909118558291536
+Mean Reward: -850.92 � 0.00
+Best Value: -850.92
+--------------------------------------------------
+Model: highmodel
+Best Parameters: {'learning_rate': 0.00435381663488338, 'buffer_size': 289759, 'learning_starts': 3597, 'batch_size': 340, 'tau': 0.02075341075321427, 'gamma': 0.9074011022035718, 'train_freq': 29, 'gradient_steps': 70, 'policy_delay': 8, 'target_policy_noise': 0.13005419729502166, 'target_noise_clip': 0.6603976310557794}
+Network Architecture: {'pi': [64, 64], 'qf': [256, 256]}
+Action Noise Sigma: 0.47424529417976113
+Mean Reward: -472.32 � 0.00
+Best Value: -472.32
+--------------------------------------------------

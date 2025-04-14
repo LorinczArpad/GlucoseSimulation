@@ -16,6 +16,11 @@ from stable_baselines3.common.env_util import make_vec_env
 from simglucose.envs import T1DSimGymnaisumEnv
 import logging
 from simglucose.simulation.scenario import CustomScenario
+import ModelAndEnviromentHelper
+
+import pkg_resources
+
+
 
 def create_and_get_directory_for_sim_results(kwargs):
     #Create folder with patient name
@@ -51,9 +56,11 @@ def save_plot_as_video(save_plot : bool, path, frames, filename):
 def main():
     SAVE_TO_CSV = True
     SAVE_VIDEO = True
-
+ 
     patient_name = "adult#002"
-       
+    
+ 
+
     def generate_meals(total_carb):
         # Random arányok generálása (összegük = 1)
         ratios = [random.uniform(0.2, 0.4), random.uniform(0.3, 0.5), random.uniform(0.2, 0.4)]
@@ -73,7 +80,7 @@ def main():
         return breakfast, lunch, dinner
 
     
-    breakfast, lunch, dinner = generate_meals(random.randint(100, 140))
+    '''breakfast, lunch, dinner = generate_meals(random.randint(100, 140))
     snack1=(random.randint(10,11),random.randint(8,11))
     snack2=(random.randint(16,17),random.randint(8,11)) 
 
@@ -85,10 +92,23 @@ def main():
         (snack2),
         (lunch)   
     ]
-
+    '''
     start_time = datetime(2025, 1, 1, 0, 0, 0)
+    
+        
+    patient_params_file = pkg_resources.resource_filename("simglucose", "params/vpatient_params.csv")
 
-    meal_scenario = CustomScenario(start_time=start_time, scenario=meal_events)
+    # Load the parameters
+    patient_params = pd.read_csv(patient_params_file)
+
+    # Get body weight for adult#002
+    patient_name = "adult#002"
+    bw = patient_params[patient_params["Name"] == patient_name]["BW"].iloc[0]
+    
+    meal_events = ModelAndEnviromentHelper.generaltnap(bw)
+    
+    meals = [(event[2], event[0]) for event in meal_events]
+    meal_scenario = CustomScenario(start_time=start_time, scenario=meals)
 
     base_kwargs = {"patient_name": patient_name, 'custom_scenario': meal_scenario}
 
@@ -130,10 +150,69 @@ def main():
     highenv.reward_range = (-100,100)
 
     env = gymnasium.make("simglucose/adolescent2-v0", render_mode="human")  # Controll Env
+    
+
+    print(f"Body weight for {patient_name}: {bw} kg")
+    
+    tuner = ModelAndEnviromentHelper.HyperparameterTuner(
+    low_env=lowenv,
+    inner_env=innerenv,
+    high_env=highenv,
+    n_trials=50,
+    timesteps=500,
+    n_eval_episodes=5
+    )
+
+    # Run tuning
+    best_params = tuner.tune_all()
+
+    # Save results
+    tuner.save_results("a2c_tuning_results.txt")
     #Models
+    '''
     lowmodel = A2C("MlpPolicy",lowenv,learning_rate=0.001,verbose=1)
     innermodel = A2C("MlpPolicy", innerenv,learning_rate=0.001,  verbose=1)
     highmodel = A2C("MlpPolicy", highenv,learning_rate=0.001,  verbose=1)
+    '''
+    lowmodel = A2C(
+        policy="MlpPolicy",
+        env=lowenv,
+        learning_rate=best_params["lowmodel"]["params"]["learning_rate"],
+        n_steps=best_params["lowmodel"]["params"]["n_steps"],
+        vf_coef=best_params["lowmodel"]["params"]["vf_coef"],
+        ent_coef=best_params["lowmodel"]["params"]["ent_coef"],
+        max_grad_norm=best_params["lowmodel"]["params"]["max_grad_norm"],
+        gae_lambda=best_params["lowmodel"]["params"]["gae_lambda"],
+        gamma=best_params["lowmodel"]["params"]["gamma"],
+        policy_kwargs={"net_arch": best_params["lowmodel"]["net_arch"]},
+        verbose=1
+    )
+    innermodel = A2C(
+        policy="MlpPolicy",
+        env=innerenv,
+        learning_rate=best_params["innermodel"]["params"]["learning_rate"],
+        n_steps=best_params["innermodel"]["params"]["n_steps"],
+        vf_coef=best_params["innermodel"]["params"]["vf_coef"],
+        ent_coef=best_params["innermodel"]["params"]["ent_coef"],
+        max_grad_norm=best_params["innermodel"]["params"]["max_grad_norm"],
+        gae_lambda=best_params["innermodel"]["params"]["gae_lambda"],
+        gamma=best_params["innermodel"]["params"]["gamma"],
+        policy_kwargs={"net_arch": best_params["innermodel"]["net_arch"]},
+        verbose=1
+    )
+    highmodel = A2C(
+        policy="MlpPolicy",
+        env=highenv,
+        learning_rate=best_params["highmodel"]["params"]["learning_rate"],
+        n_steps=best_params["highmodel"]["params"]["n_steps"],
+        vf_coef=best_params["highmodel"]["params"]["vf_coef"],
+        ent_coef=best_params["highmodel"]["params"]["ent_coef"],
+        max_grad_norm=best_params["highmodel"]["params"]["max_grad_norm"],
+        gae_lambda=best_params["highmodel"]["params"]["gae_lambda"],
+        gamma=best_params["highmodel"]["params"]["gamma"],
+        policy_kwargs={"net_arch": best_params["highmodel"]["net_arch"]},
+        verbose=1
+    )
     #Training
     TimeSteps = 500
     lowmodel.learn(total_timesteps=TimeSteps)
@@ -152,10 +231,9 @@ def main():
     risk = 0
     current_time = start_time
     print("CHO intakes:")
-    print(Fore.BLUE+f"   Breakfast: at {breakfast[0]} o'clock {breakfast[1]}g")
-    print(Fore.BLUE+f"   Lunch: at {lunch[0]} o'clock {lunch[1]}g")
-    print(Fore.BLUE+f"   Dinner: at {dinner[0]} o'clock {dinner[1]}g")
-    print(Fore.RESET)
+    for meal in meals:
+        print(Fore.BLUE+f"   Meal : at {meal[0]} o'clock {meal[1]}g")
+        print(Fore.RESET)
 
     
     insulin_timestamps = []

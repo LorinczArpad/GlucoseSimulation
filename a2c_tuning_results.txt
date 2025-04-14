@@ -1,0 +1,15 @@
+Model: lowmodel
+Best Parameters: {'learning_rate': 2.001577527663072e-05, 'gamma': 0.9970104649964907, 'ent_coef': 3.0529752762431816e-08, 'n_steps': 30}
+Mean Reward: 2320.70 ± 0.00
+Best Value: 2320.70
+--------------------------------------------------
+Model: innermodel
+Best Parameters: {'learning_rate': 0.009589509732500019, 'gamma': 0.9525568757914975, 'ent_coef': 0.0002535286577999241, 'n_steps': 38}
+Mean Reward: -1084.57 ± 0.00
+Best Value: -1084.57
+--------------------------------------------------
+Model: highmodel
+Best Parameters: {'learning_rate': 0.0056231975989323385, 'gamma': 0.9892987479242624, 'ent_coef': 5.38191858266107e-06, 'n_steps': 45}
+Mean Reward: -730.24 ± 0.00
+Best Value: -730.24
+--------------------------------------------------
