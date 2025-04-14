@@ -53,13 +53,7 @@ def main():
     SAVE_VIDEO = True
 
     patient_name = "adult#002"
-      
-    #breakfast = (random.randint(6, 9), random.randint(40, 80))  
-    #snack1 = (random.randint(10, 11), random.randint(10, 25))  
-    #lunch = (random.randint(12, 15), random.randint(50, 100))    
-    #snack2 = (random.randint(16, 17), random.randint(10, 25))    
-    #dinner = (random.randint(18, 21), random.randint(50, 90))
-
+       
     def generate_meals(total_carb):
         # Random arányok generálása (összegük = 1)
         ratios = [random.uniform(0.2, 0.4), random.uniform(0.3, 0.5), random.uniform(0.2, 0.4)]
@@ -136,13 +130,12 @@ def main():
     highenv.reward_range = (-100,100)
 
     env = gymnasium.make("simglucose/adolescent2-v0", render_mode="human")  # Controll Env
-    bw = env.patient._params["BW"].iloc[0]
     #Models
     lowmodel = A2C("MlpPolicy",lowenv,learning_rate=0.001,verbose=1)
     innermodel = A2C("MlpPolicy", innerenv,learning_rate=0.001,  verbose=1)
     highmodel = A2C("MlpPolicy", highenv,learning_rate=0.001,  verbose=1)
     #Training
-    TimeSteps = 10000
+    TimeSteps = 500
     lowmodel.learn(total_timesteps=TimeSteps)
     innermodel.learn(total_timesteps=TimeSteps)
     highmodel.learn(total_timesteps=TimeSteps)
@@ -164,6 +157,8 @@ def main():
     print(Fore.BLUE+f"   Dinner: at {dinner[0]} o'clock {dinner[1]}g")
     print(Fore.RESET)
 
+    
+    insulin_timestamps = []
     while(current_time < start_time + timedelta(hours=24) and not truncated):
         env.render()
         current_time += timedelta(minutes=3)
@@ -180,11 +175,10 @@ def main():
            action, _states =  lowmodel.predict(observation)
         
         #Controll Action
-        
        
         coefficient=1
         if(risk > 1):
-            coefficient=risk*0.45
+            coefficient=risk*1.5
         
         if(action > 0.1):
               action = 0.1*coefficient
@@ -194,6 +188,23 @@ def main():
         action = action*coefficient
         if(action > 4):
             action = 3.5
+   
+        
+        two_hour_ago = current_time - timedelta(hours=2)
+        insulin_timestamps = [t for t in insulin_timestamps if t > two_hour_ago]
+
+        #ha már 3 vagy több inzulin beadás történt az elmúlt órában akkor tiltjuk a következőt
+        if len(insulin_timestamps) >= 3:
+            action = 0
+            print(Fore.RED + f"Dosing prohibited! ({len(insulin_timestamps)} / 3)")
+            print(Fore.RESET)
+        else:
+            if action > 0:
+                insulin_timestamps.append(current_time)
+                print(Fore.YELLOW + f"Inzulin was injected: {current_time.strftime('%H:%M')}")
+                print(Fore.CYAN + f"Insulin injections in the last 2 hour: {len(insulin_timestamps)} / 3")
+                print(Fore.RESET)
+
      
         observation, reward, terminated, truncated, info = env.step(action)
         risk= info["risk"]
