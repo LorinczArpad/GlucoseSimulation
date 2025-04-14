@@ -314,7 +314,7 @@ class SimulationConfig:
         self.save_video = True
         self.patient_name = "adult#002"
         self.start_time = datetime(2025, 1, 1, 0, 0, 0)
-        self.time_steps = 500
+        self.time_steps = 1500000
         self.max_episode_steps = 480
         self.model_type = model_type
         self.model_name = model_type
@@ -533,7 +533,6 @@ class ModelTrainer:
     def plot_and_save_rewards(self, training_data_dir):
         model_names = ["lowmodel", "innermodel", "highmodel"]
         for model in model_names:
-
             csv_file = training_data_dir / f"{model}_rewards.csv"
             if not csv_file.exists():
                 print(f"Warning: {csv_file} not found. Skipping.")
@@ -542,13 +541,48 @@ class ModelTrainer:
             if df.empty:
                 print(f"Warning: {csv_file} is empty. Skipping.")
                 continue
+            
+            
+            total_timesteps = df['timestep'].max()
+            
+            
+            if total_timesteps >= 3_000_000:
+                interval = 30_000  
+            elif total_timesteps >= 1_000_000:
+                interval = 10_000  
+            elif total_timesteps >= 500_000:
+                interval = 5_000   
+            elif total_timesteps >= 100_000:
+                interval = 1_000   
+            elif total_timesteps >= 50_000:
+                interval = 500     
+            elif total_timesteps >= 10_000:
+                interval = 100     
+            elif total_timesteps >= 1_000:
+                interval = 10      
+            else:
+                interval = 1
+            
+            if interval > 1:
+               
+                df['group'] = (df['timestep'] - 1) // interval
+                grouped = df.groupby('group').agg({'timestep': 'min', 'reward': 'mean'})
+                x = grouped['timestep']  
+                y = grouped['reward']    
+                label = f"{model} Reward (avg every {interval} steps)"
+            else:
+               
+                x = df['timestep']
+                y = df['reward']
+                label = f"{model} Reward"
+            
+            
             plt.figure()
-            plt.plot(df['timestep'], df['reward'], label=f"{model} Reward")
+            plt.plot(x, y, label=label)
             plt.xlabel('Timestep')
             plt.ylabel('Reward')
             plt.title(f'{model.capitalize()} Rewards Over Time')
             plt.legend()
-
             plt.savefig(training_data_dir / f"{model}_rewards.png")
             plt.close()
             print(f"Plot saved: {training_data_dir / f'{model}_rewards.png'}")
@@ -671,24 +705,31 @@ class MetricsCalculator:
         print(Fore.GREEN + f"Metrics saved at {full_path}")
 
 def main():
+    # Setup Config 
     config = SimulationConfig(model_type="TD3")
     patient_params = config.get_patient_params()
     print(f"Body weight for {config.patient_name}: {patient_params['bw']} kg")
+    #Generate Meals
     meal_generator = MealGenerator(config)
     meal_scenario, meals = meal_generator.create_meal_scenario(patient_params["bw"])
     meal_generator.print_meals(meals)
+    # Manage Enviroments
     env_manager = EnvironmentManager(config, meal_scenario)
     env_manager.register_environments()
     env, lowenv, innerenv, highenv = env_manager.create_environments()
+    # Train Models 
     trainer = ModelTrainer(lowenv, innerenv, highenv, config)
     best_params = trainer.tune_models()
     lowmodel, innermodel, highmodel = trainer.train_models(best_params)
+    # Run the simulation
     runner = SimulationRunner(env, lowmodel, innermodel, highmodel, config)
     frames, log_data, truncated = runner.run()
+    # Save Result and metrics
     saver = DataSaver(env_manager.path_to_results, config)
     metrics_calculator = MetricsCalculator(env_manager.path_to_results, config)
     metrics = metrics_calculator.calculate_metrics(log_data)
     metrics_calculator.save_metrics(metrics)
+    
     if truncated:
         saver.save_video(frames)
         saver.save_csv(log_data)
