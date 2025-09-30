@@ -14,7 +14,7 @@ from stable_baselines3 import A2C, TD3
 from stable_baselines3.common.noise import NormalActionNoise
 import logging
 import pkg_resources
-import optuna
+#import optuna
 from stable_baselines3.common.evaluation import evaluate_policy
 import ast
 from stable_baselines3.common.callbacks import BaseCallback
@@ -30,18 +30,17 @@ class RewardLoggerCallback(BaseCallback):
         self.rewards = []  
 
     def _on_step(self) -> bool:
-
         self.rewards.append(self.locals['rewards'][0])  
         return True
 
     def save_to_csv(self, filename):
-
         df = pd.DataFrame({
             'timestep': range(1, len(self.rewards) + 1),
             'reward': self.rewards
         })
         df.to_csv(filename, index=False)
-def generaltnap(bw):
+
+def generated_day(bw):
     from scipy import stats
     from random import randint
     meal = {
@@ -440,7 +439,7 @@ class MealGenerator:
         self.config = config
 
     def create_meal_scenario(self, bw):
-        meal_events = generaltnap(bw)
+        meal_events = generated_day(bw)
         meals = [(event[2], event[0]) for event in meal_events]
         return CustomScenario(start_time=self.config.start_time, scenario=meals), meals
 
@@ -505,14 +504,11 @@ class ModelTrainer:
         params_dict = {"lowmodel": None, "innermodel": None, "highmodel": None}
         errors = []
         
-
         if not Path(filename).exists():
-
             return None
        
         with open(filename, "r") as f:
             content = f.read()
-        
         
         sections = content.split("--------------------------------------------------")
         
@@ -555,7 +551,6 @@ class ModelTrainer:
     
         for error in errors:
             print(error)
-        
         
         if any(params_dict[model] for model in ["lowmodel", "innermodel", "highmodel"]):
             return params_dict
@@ -698,6 +693,7 @@ class ModelTrainer:
             plt.savefig(training_data_dir / f"{model}_rewards.png")
             plt.close()
             print(f"Plot saved: {training_data_dir / f'{model}_rewards.png'}")
+
 class SimulationRunner:
     def __init__(self, env, lowmodel, innermodel, highmodel, config: SimulationConfig):
         self.env = env
@@ -751,13 +747,18 @@ class SimulationRunner:
         while current_time < self.config.start_time + timedelta(hours=24) and not truncated:
             self.env.render()
             current_time += timedelta(minutes=3)
+
+            #Save and append single frame
             screen = ImageGrab.grab()
             frame = np.array(screen)
             self.frames.append(frame)
+
             action = self.select_action(observation[0])
             #action = self.apply_insulin_rules(action, observation[0], risk, current_time)
             observation, reward, terminated, truncated, info = self.env.step(action)
             risk = info["risk"]
+
+            #Log
             self.log_data.append({
                 "action": action,
                 "blood glucose": observation[0],
@@ -766,6 +767,7 @@ class SimulationRunner:
                 "risk": info["risk"],
             })
             logging.info(f"Action taken: {action}, Blood Glucose: {observation[0]}, Reward: {reward}")
+            
         return self.frames, self.log_data, truncated
 
 class DataSaver:
@@ -841,11 +843,9 @@ def main():
     metrics_calculator = MetricsCalculator(env_manager.path_to_results, config)
     metrics = metrics_calculator.calculate_metrics(log_data)
     metrics_calculator.save_metrics(metrics)
-    
-    if truncated:
-        saver.save_video(frames)
-        saver.save_csv(log_data)
-    env.close()
+    saver.save_video(frames)
+    saver.save_csv(log_data)
+    env.close() 
 
 if __name__ == "__main__":
     main()
