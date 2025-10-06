@@ -6,156 +6,202 @@ import numpy as np
 import gymnasium
 from gymnasium.envs.registration import register
 from simglucose.simulation.scenario import CustomScenario
-from datetime import datetime
+from datetime import datetime, timedelta
+from collections import deque
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from simglucose.envs import T1DSimGymnaisumEnv
-from datetime import datetime, timedelta
+from simglucose.envs import T1DSimGymnasiumEnv  # Assuming ported; use shimmy if needed
 
-class CustomT1DSimGymnaisumEnv(T1DSimGymnaisumEnv):
-
-    def __init__(self, *args, **kwargs):
+class BaseLookbackEnv(T1DSimGymnasiumEnv):  # Fixed class name
+    def __init__(self, *args, lookback=10, **kwargs):
         super().__init__(*args, **kwargs)
-        self.current_time = datetime(2025, 1, 1, 0, 0, 0)#Szimuláció kezdő ideje éjfél
+        self.lookback_window = deque(maxlen=lookback)
+        self.last_blood_glucose = None
+        self.current_time = datetime(2025, 1, 1, 0, 0, 0)
+        # Augmented obs space: [BG, mean_BG, std_BG, trend, time_sin, time_cos, next_meal_CHO]
+        self.observation_space = gymnasium.spaces.Box(low=-np.inf, high=np.inf, shape=(7,))
 
+    def get_next_meal_cho(self):
+        # Stub: Get CHO from scenario (implement based on your meal_scenario)
+        return 0.0  # Placeholder; fetch from self.scenario if available
+
+    def update_lookback(self, blood_glucose):
+        self.lookback_window.append(blood_glucose)
+        mean_bg = np.mean(self.lookback_window)
+        std_bg = np.std(self.lookback_window)
+        trend = blood_glucose - self.lookback_window[0] if len(self.lookback_window) > 1 else 0
+        return mean_bg, std_bg, trend
+
+    def _get_obs(self, bg):
+        mean_bg, std_bg, trend = self.update_lookback(bg)
+        hour = self.current_time.hour
+        time_sin = np.sin(2 * np.pi * hour / 24)
+        time_cos = np.cos(2 * np.pi * hour / 24)
+        next_cho = self.get_next_meal_cho()
+        return np.array([bg, mean_bg, std_bg, trend, time_sin, time_cos, next_cho], dtype=np.float32)
+
+class CustomT1DSimGymnasiumEnv(BaseLookbackEnv):  # Fixed name
     def step(self, action):
-        observation, reward, terminated, truncated, info = super().step(action)
-        blood_glucose = observation[0]  
-        target_bg = 120  
-        bg_tolerance = 20         
-        self.current_time += timedelta(minutes=3)
-        deviation = abs(blood_glucose - target_bg)
+        # Clip action for safety
+        action = np.clip(action, 0, 0.5)
+        observation, base_reward, terminated, truncated, info = super().step(action)
+        bg = observation[0]  # Original BG
+        obs = self._get_obs(bg)  # Augmented obs
+        self.current_time += timedelta(minutes=5)  # Sync to simglucose default
 
-        #00:00 és 06:00 közötti szigorúbb bünti       
+        target_low, target_high = 70, 180
+        is_in_range = 1 if target_low <= bg <= target_high else 0
+        
+        reward = 0  # Reset; ignore base_reward for consistency
+        
+        # 1. Direct TIR Incentive (70% of reward mass)
+        tir_weight = 10.0
+        reward += tir_weight * is_in_range
+        if not is_in_range:
+            if bg < target_low:
+                reward -= 15 * ((target_low - bg) / 20)  # Linear hypo
+            else:
+                reward -= 8 * ((bg - target_high) / 50)   # Softer hyper
+        
+        # 2. Correction Bonus
+        if bg > target_high and action > 0.1:
+            correction_scale = min(5, action * 2)
+            reward += correction_scale
+            info["correction_bonus"] = True
+        
+        # 3. Stability/Trend (20% mass)
+        if len(self.lookback_window) > 1:
+            if np.std(self.lookback_window) < 15:
+                reward += 2
+            if abs(self.lookback_window[-1] - self.lookback_window[0]) < 20:
+                reward += 1
+            else:
+                reward -= 0.5
+        
+        # 4. Nighttime Safety
         if self.current_time.hour < 6:
-            if blood_glucose > 160:
-                reward -=15
-            elif 100 <= blood_glucose <=150:
-                reward += 7
+            if bg > 150:
+                reward -= 3
+            elif bg < 90:
+                reward -= 4
+            else:
+                reward += 5
         
-        if blood_glucose > target_bg + bg_tolerance:
-            reward -= 5 * (deviation / 10) 
-        elif blood_glucose < target_bg - bg_tolerance:
-            reward -= 5 * (deviation / 10) 
-        else:
-            reward += 5 
-
-            if hasattr(self, 'last_blood_glucose'):
-                fluctuation = abs(blood_glucose - self.last_blood_glucose)
-                if fluctuation < 10: 
-                    reward += 2  
-                elif fluctuation >= 10 and fluctuation < 20:  
-                    reward -= 1  
-            
-            self.last_blood_glucose = blood_glucose
-
+        # Clip
+        reward = np.clip(reward, -20, 15)
         
-        print(f"[{self.current_time.strftime('%H:%M')}] Blood Glucose: {blood_glucose}, Reward: {reward}")
+        self.last_blood_glucose = bg
+        print(f"[{self.current_time.strftime('%H:%M')}] BG: {bg:.1f}, Action: {action:.2f}, Reward: {reward:.2f}")
+        return obs, reward, terminated, truncated, info
 
-        return observation, reward, terminated, truncated, info
- 
-class LowGlucoseEnv(T1DSimGymnaisumEnv):
+class LowGlucoseEnv(BaseLookbackEnv):
     def step(self, action):
-        observation, reward, terminated, truncated, info = super().step(action)
-        blood_glucose = observation[0]
+        action = np.clip(action, 0, 0.5)
+        observation, base_reward, terminated, truncated, info = super().step(action)
+        bg = observation[0]
+        obs = self._get_obs(bg)
+        self.current_time += timedelta(minutes=5)
         
-        # Target range: 70–180 mg/dL, with emphasis on avoiding hypoglycemia (<70)
-        target_bg = 120  # Ideal glucose level
-        bg_tolerance = 20  # Tolerance around target (100–140 mg/dL)
+        # Reuse TIR logic, but bias toward hypo aversion
+        target_low, target_high = 70, 180
+        is_in_range = 1 if target_low <= bg <= target_high else 0
         
-        # Base reward for staying in safe range
-        if 70 <= blood_glucose <= 180:
-            reward += 50 - 0.2 * (blood_glucose - target_bg) ** 2  # Quadratic reward, max at 120
-        elif blood_glucose < 70:
-            deviation = 70 - blood_glucose
-            reward -= 20 * (deviation / 10)  # Linear penalty for hypoglycemia
-        else:  # blood_glucose > 180
-            deviation = blood_glucose - 180
-            reward -= 10 * (deviation / 20)  # Mild penalty for hyperglycemia
+        reward = 0
         
-        # Penalize high insulin during low glucose
-        if action > 0.3 and blood_glucose < 70:
-            reward -= 15  # Reduced penalty, only for significant insulin
+        tir_weight = 10.0
+        reward += tir_weight * is_in_range
+        if bg < target_low:
+            reward -= 20 * ((target_low - bg) / 20)  # Harsher hypo
+        elif bg > target_high:
+            reward -= 6 * ((bg - target_high) / 50)
         
-        # Reward smooth glucose transitions
-        if hasattr(self, 'last_blood_glucose'):
-            fluctuation = abs(blood_glucose - self.last_blood_glucose)
-            if fluctuation < 5:
-                reward += 5  # Bonus for stability
-            elif fluctuation > 15:
-                reward -= 5  # Penalty for large swings
+        if bg > target_high and action > 0.1:
+            reward += min(5, action * 2)
         
-        self.last_blood_glucose = blood_glucose
+        if len(self.lookback_window) > 1:
+            if np.std(self.lookback_window) < 15:
+                reward += 2
+            if abs(self.lookback_window[-1] - self.lookback_window[0]) < 20:
+                reward += 1
+            else:
+                reward -= 0.5
         
-        return observation, reward, terminated, truncated, info
+        if self.current_time.hour < 6 and bg < 90:
+            reward -= 5
+        
+        reward = np.clip(reward, -20, 15)
+        self.last_blood_glucose = bg
+        return obs, reward, terminated, truncated, info
 
-class HighGlucoseEnv(T1DSimGymnaisumEnv):
+class HighGlucoseEnv(BaseLookbackEnv):
     def step(self, action):
-        observation, reward, terminated, truncated, info = super().step(action)
-        blood_glucose = observation[0]
+        action = np.clip(action, 0, 0.5)
+        observation, base_reward, terminated, truncated, info = super().step(action)
+        bg = observation[0]
+        obs = self._get_obs(bg)
+        self.current_time += timedelta(minutes=5)
         
-        # Target range: 70–180 mg/dL, with emphasis on avoiding hyperglycemia (>180)
-        target_bg = 120
-        bg_tolerance = 20
+        target_low, target_high = 70, 180
+        is_in_range = 1 if target_low <= bg <= target_high else 0
         
-        # Base reward for staying in safe range
-        if 70 <= blood_glucose <= 180:
-            reward += 50 - 0.2 * (blood_glucose - target_bg) ** 2  # Quadratic reward, max at 120
-        elif blood_glucose > 180:
-            deviation = blood_glucose - 180
-            reward -= 20 * (deviation / 20)  # Linear penalty for hyperglycemia
-        else:  # blood_glucose < 70
-            deviation = 70 - blood_glucose
-            reward -= 10 * (deviation / 10)  # Mild penalty for hypoglycemia
+        reward = 0
         
-        # Penalize high insulin during low glucose
-        if action > 0.3 and blood_glucose < 70:
-            reward -= 15  # Reduced penalty, only for significant insulin
+        tir_weight = 10.0
+        reward += tir_weight * is_in_range
+        if bg < target_low:
+            reward -= 12 * ((target_low - bg) / 20)
+        elif bg > target_high:
+            reward -= 10 * ((bg - target_high) / 50)  # Harsher hyper
         
-        # Reward smooth glucose transitions
-        if hasattr(self, 'last_blood_glucose'):
-            fluctuation = abs(blood_glucose - self.last_blood_glucose)
-            if fluctuation < 5:
-                reward += 5  # Bonus for stability
-            elif fluctuation > 15:
-                reward -= 5  # Penalty for large swings
+        if bg > target_high and action > 0.1:
+            reward += min(7, action * 3)  # Stronger correction bonus
         
-        self.last_blood_glucose = blood_glucose
+        if len(self.lookback_window) > 1:
+            if np.std(self.lookback_window) < 15:
+                reward += 3
+            if abs(self.lookback_window[-1] - self.lookback_window[0]) < 20:
+                reward += 1
+            else:
+                reward -= 0.5
         
-        return observation, reward, terminated, truncated, info
+        reward = np.clip(reward, -20, 15)
+        self.last_blood_glucose = bg
+        return obs, reward, terminated, truncated, info
 
-class InnerGlucoseEnv(T1DSimGymnaisumEnv):
+class InnerGlucoseEnv(BaseLookbackEnv):
     def step(self, action):
-        observation, reward, terminated, truncated, info = super().step(action)
-        blood_glucose = observation[0]
+        action = np.clip(action, 0, 0.5)
+        observation, base_reward, terminated, truncated, info = super().step(action)
+        bg = observation[0]
+        obs = self._get_obs(bg)
+        self.current_time += timedelta(minutes=5)
         
-        # Target range: 70–130 mg/dL, with emphasis on tight control
-        target_bg = 100  # Tighter target for inner range
-        bg_tolerance = 15  # Narrower tolerance (85–115 mg/dL)
+        target_low, target_high = 70, 180
+        is_in_range = 1 if target_low <= bg <= target_high else 0
         
-        # Base reward for staying in tight range
-        if 70 <= blood_glucose <= 130:
-            reward += 60 - 0.3 * (blood_glucose - target_bg) ** 2  # Higher reward, max at 100
-        elif blood_glucose < 70:
-            deviation = 70 - blood_glucose
-            reward -= 15 * (deviation / 10)  # Reduced penalty for hypoglycemia
-        else:  # blood_glucose > 130
-            deviation = blood_glucose - 130
-            reward -= 10 * (deviation / 20)  # Mild penalty for exceeding 130
+        reward = 0
         
-        # Penalize high insulin doses to encourage conservative dosing
-        if action > 0.3:
-            reward -= 5  # Mild penalty for high insulin
+        tir_weight = 10.0
+        reward += tir_weight * is_in_range
+        if bg < target_low:
+            reward -= 15 * ((target_low - bg) / 20)
+        elif bg > target_high:
+            reward -= 8 * ((bg - target_high) / 50)
         
-        # Reward smooth glucose transitions
-        if hasattr(self, 'last_blood_glucose'):
-            fluctuation = abs(blood_glucose - self.last_blood_glucose)
-            if fluctuation < 5:
-                reward += 5  # Bonus for stability
-            elif fluctuation > 15:
-                reward -= 5  # Penalty for large swings
+        if bg > target_high and action > 0.1:
+            reward += min(4, action * 2)
         
-        self.last_blood_glucose = blood_glucose
+        if len(self.lookback_window) > 1:
+            if np.std(self.lookback_window) < 15:
+                reward += 2
+            if abs(self.lookback_window[-1] - self.lookback_window[0]) < 20:
+                reward += 1
+            else:
+                reward -= 0.5
         
-        return observation, reward, terminated, truncated, info
-    
+        if self.current_time.hour < 6:
+            reward += 3 if 90 <= bg <= 140 else -2
+        
+        reward = np.clip(reward, -20, 15)
+        self.last_blood_glucose = bg
+        return obs, reward, terminated, truncated, info
