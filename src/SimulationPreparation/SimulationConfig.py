@@ -30,12 +30,12 @@ from stable_baselines3.common.env_util import make_vec_env
 
 
 class SimulationConfig:
-    def __init__(self, model_type="TD3",low_model_type = "TD3",inner_model_type = "TD3",hight_model_type = "TD3"):
+    def __init__(self, model_type="TD3",low_model_type = "PPO",inner_model_type = "2AC",hight_model_type = "TD3"):
         self.save_to_csv = True
         self.save_video = True
         self.patient_name = "adult#002"
         self.start_time = dt(2025, 1, 1, 0, 0, 0)
-        self.time_steps = 100_000
+        self.time_steps = 100
         self.max_episode_steps = 480
         self.model_type = model_type
         self.model_name = model_type

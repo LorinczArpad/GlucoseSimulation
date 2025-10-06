@@ -1,7 +1,6 @@
 Model: lowmodel
-Best Parameters: {'learning_rate': 0.00023923426148646083, 'buffer_size': 206, 'learning_starts': 461, 'batch_size': 86, 'tau': 0.0050047648089982626, 'gamma': 0.9814879607801343, 'train_freq': 10, 'gradient_steps': 6, 'policy_delay': 5, 'target_policy_noise': 0.1378277718654555, 'target_noise_clip': 0.16583032282910276}
-Network Architecture: {'pi': [64, 64], 'qf': [256, 256]}
-Action Noise Sigma: 0.1431128009566065
-Mean Reward: -2593.17 ± 0.00
-Best Value: -2593.17
+Best Parameters: {'learning_rate': 0.00014024395580238206, 'n_steps': 632, 'batch_size': 36, 'gae_lambda': 0.8573431953750985, 'gamma': 0.9679246002974212, 'n_epochs': 11, 'ent_coef': 1.1158365949194163e-07, 'clip_range': 0.13863137821998295}
+Network Architecture: [64, 64]
+Mean Reward: -15361.42 ± 0.00
+Best Value: -15361.42
 --------------------------------------------------

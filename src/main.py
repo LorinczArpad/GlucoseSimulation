@@ -1,4 +1,5 @@
 from src.ModelTraining.ModelTrainer import ModelTrainer
+from src.ModelTraining.ModelTrainer import DataSaver
 from src.ModelTraining.SimulationRunner import SimulationRunner
 from src.SimulationPreparation.MealGenerator import MealGenerator
 from src.SimulationPreparation.SimulationConfig import SimulationConfig
@@ -26,7 +27,8 @@ def main():
     runner = SimulationRunner(env, lowmodel, innermodel, highmodel, config)
     frames, log_data, truncated = runner.run()
     # Save Result and metrics
-    saver = ModelTrainer.DataSaver(env_manager.path_to_results, config)
+    saver = DataSaver(env_manager.path_to_results, config)
+    saver.save_csv(env_manager.path_to_results, config)
     metrics_calculator = ModelTrainer.MetricsCalculator(env_manager.path_to_results, config)
     metrics = metrics_calculator.calculate_metrics(log_data)
     metrics_calculator.save_metrics(metrics)

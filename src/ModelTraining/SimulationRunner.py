@@ -79,6 +79,10 @@ class SimulationRunner:
         current_time = self.config.start_time
         truncated = False
         risk = 0
+        total_reward = 0
+        step_count = 0
+        tir_count = 0  # Count of steps within target glucose range (70–130)
+
         while current_time < self.config.start_time + timedelta(hours=24) and not truncated:
             self.env.render()
             current_time += timedelta(minutes=3)
@@ -93,14 +97,29 @@ class SimulationRunner:
             observation, reward, terminated, truncated, info = self.env.step(action)
             risk = info["risk"]
 
+            total_reward += reward
+            step_count += 1
+            if 70 <= observation[0] <= 130:
+                tir_count += 1
+
+            mean_reward = total_reward / step_count
+            tir_percent = (tir_count / step_count) * 100
+
             #Log
+             # Log data
             self.log_data.append({
                 "action": action,
                 "blood glucose": observation[0],
                 "reward": reward,
+                "mean_reward": mean_reward,
+                "TIR (%)": tir_percent,
                 "meal": info["meal"],
                 "risk": info["risk"],
+                "time": current_time
             })
-            logging.info(f"Action taken: {action}, Blood Glucose: {observation[0]}, Reward: {reward}")
+            logging.info(
+            f"Time: {current_time}, Action: {action}, BG: {observation[0]}, "
+            f"Reward: {reward:.2f}, Mean Reward: {mean_reward:.2f}, TIR: {tir_percent:.1f}%"
+        )
             
         return self.frames, self.log_data, truncated

@@ -181,14 +181,13 @@ class ModelTrainer:
                     n_steps=params["n_steps"],
                     vf_coef=params["vf_coef"],
                     ent_coef=params["ent_coef"],
-                    max_grad_norm=params["max_grad_norm"],
+                    max_grad_norm=params.get("max_grad_norm", 0.5),
                     gae_lambda=params["gae_lambda"],
                     gamma=params["gamma"],
                     policy_kwargs={"net_arch": net_arch},
                     verbose=1
                 )
 
-            # --- PPO ---
             elif model_type == "PPO":
                 model = PPO(
                     policy="MlpPolicy",
@@ -201,17 +200,17 @@ class ModelTrainer:
                     gae_lambda=params["gae_lambda"],
                     clip_range=params["clip_range"],
                     ent_coef=params["ent_coef"],
-                    vf_coef=params["vf_coef"],
-                    max_grad_norm=params["max_grad_norm"],
+                    vf_coef=params.get("vf_coef", 0.5),  # use default if missing
+                    max_grad_norm=params.get("max_grad_norm", 0.5),
                     policy_kwargs={"net_arch": net_arch},
                     verbose=1
                 )
 
-            # --- TD3 ---
-            else:
+            elif model_type == "TD3":
+                action_noise_sigma = best_params[name].get("action_noise_sigma", 0.1)
                 action_noise = NormalActionNoise(
                     mean=np.zeros(env.action_space.shape[-1]),
-                    sigma=best_params[name]["action_noise_sigma"] * np.ones(env.action_space.shape[-1])
+                    sigma=action_noise_sigma * np.ones(env.action_space.shape[-1])
                 )
 
                 model = TD3(
@@ -229,7 +228,7 @@ class ModelTrainer:
                     policy_delay=params["policy_delay"],
                     target_policy_noise=params["target_policy_noise"],
                     target_noise_clip=params["target_noise_clip"],
-                    policy_kwargs={"net_arch": net_arch},
+                    policy_kwargs={"net_arch": net_arch} if isinstance(net_arch, dict) else {"net_arch": net_arch},
                     verbose=1
                 )
 
