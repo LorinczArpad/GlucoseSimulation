@@ -6,6 +6,11 @@ __pycache__/main.cpython-310.pyc
 __pycache__/customEnviroments.cpython-310.pyc
 SimResult/*
 env
+venv
 Results/*
 TrainingData/*
 TrainModels/*
+src/__pycache__
+src/HyperParameterTuning/__pycache__
+src/ModelTraining/__pycache__
+src/SimulationPreparation/__pycache__
