@@ -1,0 +1,7 @@
+Model: highmodel
+Best Parameters: {'learning_rate': 0.0005472815546379423, 'buffer_size': 439, 'learning_starts': 132, 'batch_size': 26, 'tau': 0.03970218547458091, 'gamma': 0.9885498219941843, 'train_freq': 8, 'gradient_steps': 16, 'policy_delay': 5, 'target_policy_noise': 0.0817606616700052, 'target_noise_clip': 0.27183193102714187}
+Network Architecture: {'pi': [64, 64], 'qf': [256, 256]}
+Action Noise Sigma: 0.24466618495806874
+Mean Reward: -1212.93 ± 0.00
+Best Value: -1212.93
+--------------------------------------------------
