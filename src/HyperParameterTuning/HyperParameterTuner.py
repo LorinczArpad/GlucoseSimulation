@@ -74,7 +74,7 @@ class HyperparameterTuner:
             normalize_advantage=False,
         )
         try:
-            model.learn(total_timesteps=500)
+            model.learn(total_timesteps=10000)
             mean_reward, std_reward = evaluate_policy(
                 model,
                 env,
@@ -194,7 +194,7 @@ class TD3HyperparameterTuner:
             seed=trial.number
         )
         try:
-            model.learn(total_timesteps=500)
+            model.learn(total_timesteps=10000)
             mean_reward, std_reward = evaluate_policy(
                 model,
                 env,
