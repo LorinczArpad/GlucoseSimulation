@@ -118,8 +118,11 @@ class SimulationRunner:
                 "time": current_time
             })
             logging.info(
-            f"Time: {current_time}, Action: {action}, BG: {observation[0]}, "
-            f"Reward: {reward:.2f}, Mean Reward: {mean_reward:.2f}, TIR: {tir_percent:.1f}%"
-        )
+                f"Time: {current_time.strftime('%H:%M')}, "
+                f"Action: {action}, BG: {observation[0]}, "
+                f"Mean Reward: {mean_reward}, "
+                f"TIR: {tir_percent:.1f}%"
+            )
+        
             
         return self.frames, self.log_data, truncated

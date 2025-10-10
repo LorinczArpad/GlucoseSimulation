@@ -29,7 +29,7 @@ from stable_baselines3.common.env_util import make_vec_env
 
 
 class HyperparameterTuner:
-    def __init__(self, low_env, inner_env, high_env, n_trials=10, n_eval_episodes=5):
+    def __init__(self, low_env, inner_env, high_env, n_trials=10, n_eval_episodes=1):
         self.low_env = low_env
         self.inner_env = inner_env
         self.high_env = high_env
@@ -132,7 +132,7 @@ class HyperparameterTuner:
                     f.write("-" * 50 + "\n")
         print(f"Results saved to {filename}")
 class TD3HyperparameterTuner:
-    def __init__(self, low_env, inner_env, high_env, n_trials=5, n_eval_episodes=1):
+    def __init__(self, low_env, inner_env, high_env, n_trials=10, n_eval_episodes=1):
         self.low_env = low_env
         self.inner_env = inner_env
         self.high_env = high_env
@@ -256,7 +256,7 @@ class TD3HyperparameterTuner:
                     f.write("-" * 50 + "\n")
         print(f"Results saved to {filename}")
 class PPOHyperparameterTuner:
-    def __init__(self, low_env, inner_env, high_env, n_trials=5, n_eval_episodes=1):
+    def __init__(self, low_env, inner_env, high_env, n_trials=10, n_eval_episodes=1):
         self.low_env = low_env
         self.inner_env = inner_env
         self.high_env = high_env
@@ -305,7 +305,7 @@ class PPOHyperparameterTuner:
             seed=trial.number
         )
         try:
-            model.learn(total_timesteps=10000)  # Evaluate over 10,000 steps
+            model.learn(total_timesteps=500)  # Evaluate over 10,000 steps
             mean_reward, std_reward = evaluate_policy(
                 model,
                 env,  # Evaluate on single environment for consistency

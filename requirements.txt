@@ -10,3 +10,4 @@ torch>=2.0.0
 scipy>=1.10.0
 optuna>=3.0.0
 matplotlib
+

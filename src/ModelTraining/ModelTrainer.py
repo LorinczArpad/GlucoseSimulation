@@ -318,7 +318,7 @@ class DataSaver:
             init_colorama(True)
             full_path = self.path / filename
             print(Fore.RED + "Saving video, this may take several seconds or minutes!")
-            imageio.mimsave(full_path, frames, format="mp4", fps=20)
+            imageio.mimsave(full_path, frames, format="ffmpeg", fps=20)
             print(Fore.GREEN + f"Video saved at {full_path}")
 
 class MetricsCalculator:

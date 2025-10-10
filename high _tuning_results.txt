@@ -1,7 +1,7 @@
 Model: highmodel
-Best Parameters: {'learning_rate': 0.00035405492895964746, 'buffer_size': 66, 'learning_starts': 110, 'batch_size': 24, 'tau': 0.036936436202507555, 'gamma': 0.9825871514491095, 'train_freq': 8, 'gradient_steps': 19, 'policy_delay': 3, 'target_policy_noise': 0.09456359133572252, 'target_noise_clip': 0.4384526773722087}
+Best Parameters: {'learning_rate': 0.0007057688869891168, 'buffer_size': 11, 'learning_starts': 168, 'batch_size': 19, 'tau': 0.016408439796933474, 'gamma': 0.9732355564994956, 'train_freq': 5, 'gradient_steps': 14, 'policy_delay': 4, 'target_policy_noise': 0.13191020827141312, 'target_noise_clip': 0.34099065301199416}
 Network Architecture: [64, 64]
-Action Noise Sigma: 0.15114026173719058
-Mean Reward: -36251.63 ± 0.00
-Best Value: -36251.63
+Action Noise Sigma: 0.14315198092884635
+Mean Reward: -393.71 ± 0.00
+Best Value: -393.71
 --------------------------------------------------

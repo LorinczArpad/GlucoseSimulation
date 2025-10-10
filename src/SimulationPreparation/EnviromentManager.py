@@ -10,6 +10,7 @@ import random
 from datetime import timedelta, datetime
 from gymnasium.envs.registration import register
 from simglucose.simulation.scenario import CustomScenario
+from src.SimulationPreparation.MealGenerator import MealGenerator
 from src.SimulationPreparation.SimulationConfig import SimulationConfig
 from stable_baselines3 import A2C, TD3
 from stable_baselines3.common.noise import NormalActionNoise
@@ -48,7 +49,7 @@ class EnvironmentManager:
 
     def register_environments(self):
         env_configs = [
-            ("simglucose/adolescent2-v0", "CustomT1DSimGymnaisumEnv"),
+            ("simglucose/adolescent2-v0", "CustomT1DSimGymnasiumEnv"),
             ("simglucose/adolescent2-v0-low", "LowGlucoseEnv"),
             ("simglucose/adolescent2-v0-high", "HighGlucoseEnv"),
             ("simglucose/adolescent2-v0-inner", "InnerGlucoseEnv"),

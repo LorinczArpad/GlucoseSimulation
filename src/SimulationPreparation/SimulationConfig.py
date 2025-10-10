@@ -35,7 +35,7 @@ class SimulationConfig:
         self.save_video = True
         self.patient_name = "adult#002"
         self.start_time = dt(2025, 1, 1, 0, 0, 0)
-        self.time_steps = 100
+        self.time_steps = 500
         self.max_episode_steps = 480
         self.model_type = model_type
         self.model_name = model_type

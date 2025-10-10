@@ -1,6 +1,6 @@
 Model: lowmodel
-Best Parameters: {'learning_rate': 0.00014024395580238206, 'n_steps': 632, 'batch_size': 36, 'gae_lambda': 0.8573431953750985, 'gamma': 0.9679246002974212, 'n_epochs': 11, 'ent_coef': 1.1158365949194163e-07, 'clip_range': 0.13863137821998295}
-Network Architecture: [64, 64]
-Mean Reward: -15361.42 ± 0.00
-Best Value: -15361.42
+Best Parameters: {'learning_rate': 0.00024458209423824993, 'n_steps': 1226, 'batch_size': 67, 'gae_lambda': 0.8050090409679397, 'gamma': 0.9833597988545558, 'n_epochs': 18, 'ent_coef': 1.0979439406528646e-07, 'clip_range': 0.1444961579726374}
+Network Architecture: [256, 256]
+Mean Reward: 3459.59 ± 0.00
+Best Value: 3459.59
 --------------------------------------------------

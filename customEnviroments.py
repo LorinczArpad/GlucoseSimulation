@@ -8,22 +8,33 @@ from gymnasium.envs.registration import register
 from simglucose.simulation.scenario import CustomScenario
 from datetime import datetime, timedelta
 from collections import deque
+from src.SimulationPreparation.MealGenerator import MealGenerator
+from src.SimulationPreparation.SimulationConfig import SimulationConfig
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from simglucose.envs import T1DSimGymnasiumEnv  # Assuming ported; use shimmy if needed
+from simglucose.envs import T1DSimGymnaisumEnv
 
-class BaseLookbackEnv(T1DSimGymnasiumEnv):  # Fixed class name
+class BaseLookbackEnv(T1DSimGymnaisumEnv): 
     def __init__(self, *args, lookback=10, **kwargs):
         super().__init__(*args, **kwargs)
         self.lookback_window = deque(maxlen=lookback)
         self.last_blood_glucose = None
         self.current_time = datetime(2025, 1, 1, 0, 0, 0)
-        # Augmented obs space: [BG, mean_BG, std_BG, trend, time_sin, time_cos, next_meal_CHO]
-        self.observation_space = gymnasium.spaces.Box(low=-np.inf, high=np.inf, shape=(7,))
+        self.config = SimulationConfig(model_type="PPO")
+        self.observation_space = gymnasium.spaces.Box(
+            low=0, high=self.MAX_BG, shape=(1,), dtype=np.float32
+        )
 
-    def get_next_meal_cho(self):
-        # Stub: Get CHO from scenario (implement based on your meal_scenario)
-        return 0.0  # Placeholder; fetch from self.scenario if available
+
+    def reset(self, *, seed=None, options=None):
+
+        patient_params = self.config.get_patient_params()
+        bw = patient_params['bw']
+        meal_generator = MealGenerator(self.config)
+        meal_scenario, meals = meal_generator.create_meal_scenario(bw)
+        self.custom_scenario = meal_scenario
+        return  super().reset(seed=seed)
+
 
     def update_lookback(self, blood_glucose):
         self.lookback_window.append(blood_glucose)
@@ -37,24 +48,23 @@ class BaseLookbackEnv(T1DSimGymnasiumEnv):  # Fixed class name
         hour = self.current_time.hour
         time_sin = np.sin(2 * np.pi * hour / 24)
         time_cos = np.cos(2 * np.pi * hour / 24)
-        next_cho = self.get_next_meal_cho()
-        return np.array([bg, mean_bg, std_bg, trend, time_sin, time_cos, next_cho], dtype=np.float32)
+        
+        return np.array([bg, mean_bg, std_bg, trend, time_sin, time_cos], dtype=np.float32)
 
-class CustomT1DSimGymnasiumEnv(BaseLookbackEnv):  # Fixed name
+class CustomT1DSimGymnasiumEnv(BaseLookbackEnv): 
     def step(self, action):
-        # Clip action for safety
+        
         action = np.clip(action, 0, 0.5)
         observation, base_reward, terminated, truncated, info = super().step(action)
-        bg = observation[0]  # Original BG
-        obs = self._get_obs(bg)  # Augmented obs
-        self.current_time += timedelta(minutes=5)  # Sync to simglucose default
-
+        bg = observation[0]  
+        obs = self._get_obs(bg)  
+        self.current_time += timedelta(minutes=5)  
         target_low, target_high = 70, 180
         is_in_range = 1 if target_low <= bg <= target_high else 0
         
-        reward = 0  # Reset; ignore base_reward for consistency
+        reward = 0  
         
-        # 1. Direct TIR Incentive (70% of reward mass)
+        
         tir_weight = 10.0
         reward += tir_weight * is_in_range
         if not is_in_range:
@@ -91,7 +101,7 @@ class CustomT1DSimGymnasiumEnv(BaseLookbackEnv):  # Fixed name
         reward = np.clip(reward, -20, 15)
         
         self.last_blood_glucose = bg
-        print(f"[{self.current_time.strftime('%H:%M')}] BG: {bg:.1f}, Action: {action:.2f}, Reward: {reward:.2f}")
+        return np.array([observation[0]], dtype=np.float32), reward, terminated, truncated, info
         return obs, reward, terminated, truncated, info
 
 class LowGlucoseEnv(BaseLookbackEnv):
@@ -131,6 +141,7 @@ class LowGlucoseEnv(BaseLookbackEnv):
         
         reward = np.clip(reward, -20, 15)
         self.last_blood_glucose = bg
+        return np.array([observation[0]], dtype=np.float32), reward, terminated, truncated, info
         return obs, reward, terminated, truncated, info
 
 class HighGlucoseEnv(BaseLookbackEnv):
@@ -166,6 +177,7 @@ class HighGlucoseEnv(BaseLookbackEnv):
         
         reward = np.clip(reward, -20, 15)
         self.last_blood_glucose = bg
+        return np.array([observation[0]], dtype=np.float32), reward, terminated, truncated, info
         return obs, reward, terminated, truncated, info
 
 class InnerGlucoseEnv(BaseLookbackEnv):
@@ -204,4 +216,5 @@ class InnerGlucoseEnv(BaseLookbackEnv):
         
         reward = np.clip(reward, -20, 15)
         self.last_blood_glucose = bg
+        return np.array([observation[0]], dtype=np.float32), reward, terminated, truncated, info
         return obs, reward, terminated, truncated, info

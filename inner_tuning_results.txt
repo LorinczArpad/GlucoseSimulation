@@ -1,7 +1,7 @@
 Model: innermodel
-Best Parameters: {'learning_rate': 0.00034889183996652157, 'buffer_size': 190, 'learning_starts': 207, 'batch_size': 74, 'tau': 0.03789162003360646, 'gamma': 0.9698965914916116, 'train_freq': 1, 'gradient_steps': 5, 'policy_delay': 5, 'target_policy_noise': 0.1558059524026369, 'target_noise_clip': 0.29348527112021144}
-Network Architecture: [128, 128]
-Action Noise Sigma: 0.20291611429226453
-Mean Reward: -470.30 ± 0.00
-Best Value: -470.30
+Best Parameters: {'learning_rate': 0.0007926740248734926, 'buffer_size': 13, 'learning_starts': 299, 'batch_size': 71, 'tau': 0.03522168572764488, 'gamma': 0.9830179851322043, 'train_freq': 10, 'gradient_steps': 19, 'policy_delay': 5, 'target_policy_noise': 0.15494840517119865, 'target_noise_clip': 0.33590583071141517}
+Network Architecture: [64, 64]
+Action Noise Sigma: 0.18853426078913701
+Mean Reward: -389.34 ± 0.00
+Best Value: -389.34
 --------------------------------------------------
