@@ -305,7 +305,7 @@ class PPOHyperparameterTuner:
             seed=trial.number
         )
         try:
-            model.learn(total_timesteps=500)  # Evaluate over 10,000 steps
+            model.learn(total_timesteps=10000)  # Evaluate over 10,000 steps
             mean_reward, std_reward = evaluate_policy(
                 model,
                 env,  # Evaluate on single environment for consistency
